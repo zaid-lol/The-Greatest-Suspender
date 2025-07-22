@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "The Greatest Suspender",
   "version": "1.0",
-  "description": "Reclaim Chrome's memory! The Greatest Suspender auto/manually suspends inactive tabs, boosting performance",
-  "homepage_url": "https://github.com/zaid-lol/The-Greatest-Suspender"
+  "description": "Reclaim Chrome's memory! The Greatest Suspender auto/manually suspends inactive tabs, boosting performa",
+  "homepage_url": "https://github.com/zaid-lol/The-Greatest-Suspender",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -33,7 +33,7 @@
     "suspend-current-tab": {
       "suggested_key": {
         "default": "Ctrl+Shift+S",
-        "mac": "Command+Shift=S"
+        "mac": "Command+Shift+S"
       },
       "description": "Suspend the current tab"
     }
