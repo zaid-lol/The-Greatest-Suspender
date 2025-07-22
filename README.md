@@ -1,6 +1,6 @@
 # The Greatest Suspender
 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/YOUR_USERNAME/The-Greatest-Suspender/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/zaid-lol/The-Greatest-Suspender/blob/main/LICENSE)
 Reclaim your browser's memory and boost performance by intelligently suspending inactive tabs.
 
 ## Overview
