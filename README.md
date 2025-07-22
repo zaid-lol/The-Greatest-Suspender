@@ -52,20 +52,3 @@ Your extension, "The Greatest Suspender," should now appear in your list of inst
 * **Keyboard Shortcut:** Press `Ctrl + Shift + S` (or `Command + Shift + S` on Mac) to instantly suspend the currently active tab.
 * **Context Menu:** Right-click on any tab in the tab bar or on any webpage to find the "Suspend This Tab" option.
 * **Options Page:** Right-click the extension icon and select "Options" to configure automatic suspension settings, exclusion rules, and theme.
-
-## Screenshots (Optional but Recommended)
-
-*(You can add screenshots here. Once you upload images to your GitHub repository (e.g., in an `assets` folder), you can link them like this:)*
-
-`![Extension Popup Example](assets/popup-screenshot.png)`
-`![Options Page Example](assets/options-screenshot.png)`
-`![Suspended Tab Example](assets/assets/suspended-tab-screenshot.png)`
-
-## Support / Donation
-
-If you find this extension helpful and would like to support its continued development, please consider a small donation! Your support is greatly appreciated.
-
-[**Donate / Buy Me a Coffee**](**#YOUR_DONATION_LINK_HERE#**)
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
