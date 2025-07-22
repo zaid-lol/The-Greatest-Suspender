@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Suspender Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            width: 450px; /* Wider for settings */
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        body.dark-mode { /* Dark mode styles */
+            background-color: #333;
+            color: #eee;
+        }
+        body.dark-mode .setting-section {
+            background-color: #444;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        body.dark-mode h1, body.dark-mode h2 {
+            color: #fff;
+        }
+        body.dark-mode label {
+            color: #ccc;
+        }
+        body.dark-mode input[type="number"],
+        body.dark-mode textarea,
+        body.dark-mode select {
+            background-color: #555;
+            color: #eee;
+            border-color: #666;
+        }
+
+        h1 {
+            color: #3498db;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .setting-section {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .setting-section h2 {
+            margin-top: 0;
+            color: #555;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+            margin-right: 5px;
+        }
+        select { /* Styles for all select elements, including the new unit selector */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+        input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2); /* Make checkbox slightly larger */
+        }
+        .checkbox-label { /* Style for checkbox labels */
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        textarea {
+            width: calc(100% - 20px);
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical; /* Allow vertical resizing */
+        }
+        button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        #statusMessage {
+            margin-top: 15px;
+            font-weight: bold;
+            color: green;
+        }
+        /* New style for donation button */
+        .donation-button {
+            background-color: #f39c12; /* Orange color for donation */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            text-decoration: none; /* Remove underline from link */
+            display: inline-block; /* Allow padding and margin */
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .donation-button:hover {
+            background-color: #e67e22;
+        }
+        body.dark-mode .donation-button {
+            background-color: #e67e22; /* Darker orange for dark mode */
+        }
+        body.dark-mode .donation-button:hover {
+            background-color: #d35400;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Tab Suspender Settings</h1>
+
+    <div class="setting-section">
+        <h2>Automatic Suspension</h2>
+        <label for="inactivityTimeValue">Automatically suspend tabs after:</label>
+        <input type="number" id="inactivityTimeValue" min="1" value="15">
+        <select id="inactivityTimeUnit">
+            <option value="seconds">seconds</option>
+            <option value="minutes">minutes</option>
+            <option value="hours">hours</option>
+        </select>
+    </div>
+
+    <div class="setting-section">
+        <h2>Never Suspend These Tabs</h2>
+        <label class="checkbox-label">
+            <input type="checkbox" id="neverSuspendPinned"> Pinned tabs
+        </label>
+        <label class="checkbox-label">
+            <input type="checkbox" id="neverSuspendActiveInWindow"> The active tab in each window
+        </label>
+        <label class="checkbox-label">
+            <input type="checkbox" id="neverSuspendAudio"> Tabs that are playing audio
+        </label>
+        <label class="checkbox-label">
+            <input type="checkbox" id="neverSuspendOffline"> Tabs when offline
+        </label>
+        <label class="checkbox-label">
+            <input type="checkbox" id="neverSuspendPowerConnected"> Tabs when connected to power source
+        </label>
+    </div>
+
+    <div class="setting-section">
+        <h2>Auto-Restore</h2>
+        <label class="checkbox-label">
+            <input type="checkbox" id="autoUnsuspendOnView"> Automatically unsuspend tab when it is viewed
+        </label>
+    </div>
+
+    <div class="setting-section">
+        <h2>Appearance & Integration</h2>
+        <label for="theme">Theme:</label>
+        <select id="theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </select>
+        <label class="checkbox-label" style="margin-top: 15px;">
+            <input type="checkbox" id="addContextMenu"> Add "Suspend Tab" to right-click menu
+        </label>
+    </div>
+
+    <div class="setting-section">
+        <h2>Never Suspend URLs (one per line)</h2>
+        <textarea id="excludedUrls" placeholder="e.g., https://mail.google.com"></textarea>
+    </div>
+
+    <button id="saveButton">Save Settings</button>
+    <div id="statusMessage"></div>
+
+    <div class="setting-section">
+        <h2>Support Development</h2>
+        <p>If you find this extension useful, please consider a small donation to support its continued development!</p>
+        <a href="#YOUR_DONATION_LINK_HERE#" target="_blank" class="donation-button">Donate / Buy Me a Coffee</a>
+    </div>
+    <script src="options.js"></script>
+</body>
+</html>

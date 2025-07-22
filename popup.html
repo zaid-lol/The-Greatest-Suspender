@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Suspender</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            width: 300px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            color: #333; /* Default text color */
+        }
+        body.dark-mode { /* Dark mode styles for popup */
+            background-color: #333;
+            color: #eee;
+        }
+        body.dark-mode h3 {
+            color: #fff;
+        }
+        body.dark-mode li {
+            background-color: #444;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        body.dark-mode .tab-url {
+            color: #bbb;
+        }
+        body.dark-mode button {
+            background-color: #555;
+            color: #eee;
+        }
+        body.dark-mode button:hover {
+            background-color: #666;
+        }
+        body.dark-mode button.restore {
+            background-color: #28a745; /* Green for restore remains */
+        }
+        body.dark-mode button.restore:hover {
+            background-color: #218838;
+        }
+        body.dark-mode button.danger {
+            background-color: #dc3545; /* Red for danger remains */
+        }
+        body.dark-mode button.danger:hover {
+            background-color: #c82333;
+        }
+
+
+        h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .action-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background-color: #fff;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tab-info {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            max-width: 200px;
+            overflow: hidden;
+        }
+        .tab-title {
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tab-url {
+            font-size: 0.85em;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 0.9em;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button.restore {
+            background-color: #28a745;
+        }
+        button.restore:hover {
+            background-color: #218838;
+        }
+        button.danger {
+            background-color: #dc3545;
+        }
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        .suspended-indicator {
+            color: orange;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h3>Tab Actions</h3>
+    <div class="action-buttons">
+        <button id="suspendAllExceptCurrentButton">Suspend All But This</button>
+        <button id="suspendAllButton">Suspend All</button>
+        <button id="unsuspendAllButton" class="restore">Unsuspend All</button>
+        <button id="settingsButton">Extension Settings</button>
+    </div>
+
+    <h3>Open Tabs</h3>
+    <ul id="tabList">
+        </ul>
+    <script src="popup.js"></script>
+</body>
+</html>
