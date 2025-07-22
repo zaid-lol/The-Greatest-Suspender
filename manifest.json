@@ -3,7 +3,7 @@
   "name": "The Greatest Suspender",
   "version": "1.0",
   "description": "Reclaim Chrome's memory! The Greatest Suspender auto/manually suspends inactive tabs, boosting performa",
-  "homepage_url": "https://github.com/zaid-lol/The-Greatest-Suspender", // <--- Make sure your username is here
+  "homepage_url": "https://github.com/zaid-lol/The-Greatest-Suspender"
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
