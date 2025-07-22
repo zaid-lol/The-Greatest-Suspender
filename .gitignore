@@ -1,0 +1,13 @@
+# Operating System Files
+.DS_Store # macOS
+Thumbs.db # Windows
+
+# Editor/IDE Specific Files
+.vscode/ # VS Code settings directory
+*.sublime-project
+*.sublime-workspace
+.idea/ # IntelliJ/WebStorm
+
+# Generated Files
+*.zip # Ignore any zip files you create for packaging/publishing
+*.crx # Ignore compiled Chrome extension files
