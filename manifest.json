@@ -1,32 +1,34 @@
 {
-  "name": "Simple Tab Suspender",
-  "description": "Suspends inactive tabs to save memory, with customizable settings.",
-  "version": "1.0",
   "manifest_version": 3,
+  "name": "The Greatest Suspender",
+  "version": "1.0",
+  "description": "Reclaim Chrome's memory! The Greatest Suspender auto/manually suspends inactive tabs, boosting performa",
+  "homepage_url": "https://github.com/zaid-lol/The-Greatest-Suspender",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "options_page": "options.html",
   "background": {
     "service_worker": "background.js"
   },
   "permissions": [
     "tabs",
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
-  },
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "commands": {
     "suspend-current-tab": {
       "suggested_key": {
@@ -36,5 +38,10 @@
       "description": "Suspend the current tab"
     }
   },
-  "options_page": "options.html"
+  "web_accessible_resources": [
+    {
+      "resources": [ "suspended.html" ],
+      "matches": [ "<all_urls>" ]
+    }
+  ]
 }
