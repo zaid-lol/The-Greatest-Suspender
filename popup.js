@@ -4,14 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const suspendAllButCurrentBtn = document.getElementById('suspendAllButCurrentBtn');
     const unsuspendAllBtn = document.getElementById('unsuspendAllBtn');
     const loadingMessage = document.getElementById('loadingMessage');
-    const unsuspendInBackgroundCheckbox = document.getElementById('unsuspendInBackground'); // NEW: Get the checkbox
+    const unsuspendInBackgroundCheckbox = document.getElementById('unsuspendInBackground');
 
     let currentTabId = null;
 
-    // Load settings when popup opens
-    function loadSettings() {
+    // Load settings (specifically for the unsuspendInBackground checkbox)
+    function loadSettingsForPopup() {
         chrome.storage.sync.get({
-            theme: 'light',
+            theme: 'light', // Assuming theme might also affect popup appearance
             unsuspendInBackground: false // Default to false (unsuspend and activate)
         }, (items) => {
             if (items.theme === 'dark') {
@@ -20,19 +20,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.remove('dark-mode');
             }
             // Set checkbox state
-            unsuspendInBackgroundCheckbox.checked = items.unsuspendInBackground;
+            if (unsuspendInBackgroundCheckbox) {
+                unsuspendInBackgroundCheckbox.checked = items.unsuspendInBackground;
+            }
         });
     }
 
     // Save setting when checkbox changes
-    if (unsuspendInBackgroundCheckbox) { // Ensure checkbox exists before adding listener
+    if (unsuspendInBackgroundCheckbox) {
         unsuspendInBackgroundCheckbox.addEventListener('change', () => {
             chrome.storage.sync.set({
                 unsuspendInBackground: unsuspendInBackgroundCheckbox.checked
             });
         });
     }
-
 
     function renderTabs() {
         tabList.innerHTML = '';
@@ -87,17 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.error('Popup: [RenderTabs] Error parsing URL object for suspended tab (ID: ' + tab.id + '):', tab.url, e);
                         }
 
-                        console.log(`Popup: [RenderTabs] Processing suspended tab ID: ${tab.id}`);
-                        console.log(`Popup: [RenderTabs] Tab URL: ${tab.url}`);
-                        console.log(`Popup: [RenderTabs] Extracted originalUrlFromParams (via new URL().searchParams.get()):`, originalUrlFromParams);
-
-
                         actionButton.addEventListener('click', () => {
                             if (originalUrlFromParams) {
-                                // NEW: Determine makeActive based on checkbox
-                                const makeActive = !unsuspendInBackgroundCheckbox.checked;
-                                // ADDED LOG HERE
-                                console.log(`Popup: Sending unsuspend message for tab ${tab.id}. makeActive: ${makeActive}`); 
+                                const makeActive = unsuspendInBackgroundCheckbox ? !unsuspendInBackgroundCheckbox.checked : true; // Default to true if checkbox is missing
                                 chrome.runtime.sendMessage({ action: "unsuspendTabFromPopup", tabId: tab.id, url: decodeURIComponent(originalUrlFromParams), makeActive: makeActive }, response => {
                                     if (response && response.status === "ok") {
                                         renderTabs();
@@ -142,19 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Bulk Actions
 
-    if (!suspendAllButCurrentBtn) {
-        console.error('Popup: ERROR! "suspendAllButCurrentBtn" element not found in popup.html!');
-    } else {
-        console.log('Popup: "suspendAllButCurrentBtn" element found. Attaching listener...');
+    if (suspendAllButCurrentBtn) {
         suspendAllButCurrentBtn.addEventListener('click', () => {
-            console.log('Popup: "Suspend All But Current" button CLICKED!');
             chrome.tabs.query({ currentWindow: true }, (tabs) => {
                 const tabsToSuspend = tabs.filter(tab =>
                     (tab.url.startsWith('http://') || tab.url.startsWith('https://')) &&
                     !tab.active &&
                     !tab.url.startsWith(chrome.runtime.getURL('suspended.html'))
                 );
-                console.log('Popup: Tabs filtered for "Suspend All Except Current":', tabsToSuspend.map(t => t.url));
                 if (tabsToSuspend.length > 0) {
                     chrome.runtime.sendMessage({ action: "bulkSuspend", tabsToSuspend: tabsToSuspend }, response => {
                         if (response && response.status === "ok") {
@@ -163,65 +151,60 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.error('Popup: Failed to receive OK response for bulkSuspend (Suspend All Except Current):', response);
                         }
                     });
-                } else {
-                    console.log('Popup: No tabs found to suspend for "Suspend All Except Current".');
                 }
             });
         });
     }
 
-    suspendAllBtn.addEventListener('click', () => {
-        chrome.tabs.query({ currentWindow: true }, (tabs) => {
-            const tabsToSuspend = tabs.filter(tab =>
-                (tab.url.startsWith('http://') || tab.url.startsWith('https://')) &&
-                !tab.url.startsWith(chrome.runtime.getURL('suspended.html'))
-            );
-            console.log('Popup: Tabs filtered for "Suspend All":', tabsToSuspend.map(t => t.url));
-            if (tabsToSuspend.length > 0) {
-                chrome.runtime.sendMessage({ action: "bulkSuspend", tabsToSuspend: tabsToSuspend }, response => {
-                    if (response && response.status === "ok") {
-                        renderTabs();
-                    } else {
-                        console.error('Popup: Failed to receive OK response for bulkSuspend (Suspend All):', response);
-                    }
-                });
-            } else {
-                console.log('Popup: No tabs found to suspend for "Suspend All".');
-            }
-        });
-    });
-
-    unsuspendAllBtn.addEventListener('click', () => {
-        chrome.tabs.query({ currentWindow: true, url: chrome.runtime.getURL('suspended.html') + '*' }, (tabs) => {
-            const tabsToUnsuspend = tabs.map(tab => {
-                let originalUrl = null;
-                try {
-                    const urlObj = new URL(tab.url);
-                    const originalUrlEncoded = urlObj.searchParams.get('originalUrl');
-                    if (originalUrlEncoded !== null) {
-                        originalUrl = decodeURIComponent(originalUrlEncoded);
-                    }
-                } catch (e) {
-                    console.error('Popup: Error parsing URL object for bulk unsuspend (ID: ' + tab.id + '):', tab.url, e);
+    if (suspendAllBtn) {
+        suspendAllBtn.addEventListener('click', () => {
+            chrome.tabs.query({ currentWindow: true }, (tabs) => {
+                const tabsToSuspend = tabs.filter(tab =>
+                    (tab.url.startsWith('http://') || tab.url.startsWith('https://')) &&
+                    !tab.url.startsWith(chrome.runtime.getURL('suspended.html'))
+                );
+                if (tabsToSuspend.length > 0) {
+                    chrome.runtime.sendMessage({ action: "bulkSuspend", tabsToSuspend: tabsToSuspend }, response => {
+                        if (response && response.status === "ok") {
+                            renderTabs();
+                        } else {
+                            console.error('Popup: Failed to receive OK response for bulkSuspend (Suspend All):', response);
+                        }
+                    });
                 }
-
-                return { id: tab.id, url: originalUrl };
-            }).filter(tab => tab.url && tab.url !== 'null');
-
-            console.log('Popup: Tabs filtered for "Bulk Unsuspend" (after checking for "null" string):', tabsToUnsuspend.map(t => t.url));
-            if (tabsToUnsuspend.length > 0) {
-                chrome.runtime.sendMessage({ action: "bulkUnsuspend", tabsToUnsuspend: tabsToUnsuspend }, response => {
-                    if (response && response.status === "ok") {
-                        renderTabs();
-                    }
-                });
-            } else {
-                console.log('Popup: No valid suspended tabs found to unsuspend.');
-            }
+            });
         });
-    });
+    }
 
-    loadSettings(); // Call loadSettings when the popup opens
+    if (unsuspendAllBtn) {
+        unsuspendAllBtn.addEventListener('click', () => {
+            chrome.tabs.query({ currentWindow: true, url: chrome.runtime.getURL('suspended.html') + '*' }, (tabs) => {
+                const tabsToUnsuspend = tabs.map(tab => {
+                    let originalUrl = null;
+                    try {
+                        const urlObj = new URL(tab.url);
+                        const originalUrlEncoded = urlObj.searchParams.get('originalUrl');
+                        if (originalUrlEncoded !== null) {
+                            originalUrl = decodeURIComponent(originalUrlEncoded);
+                        }
+                    } catch (e) {
+                        console.error('Popup: Error parsing URL object for bulk unsuspend (ID: ' + tab.id + '):', tab.url, e);
+                    }
+                    return { id: tab.id, url: originalUrl };
+                }).filter(tab => tab.url && tab.url !== 'null');
+
+                if (tabsToUnsuspend.length > 0) {
+                    chrome.runtime.sendMessage({ action: "bulkUnsuspend", tabsToUnsuspend: tabsToUnsuspend }, response => {
+                        if (response && response.status === "ok") {
+                            renderTabs();
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    loadSettingsForPopup(); // Call loadSettingsForPopup when the popup opens
     renderTabs();
 
     chrome.tabs.onActivated.addListener(renderTabs);
