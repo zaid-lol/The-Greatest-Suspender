@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const inactivityTimeValueInput = document.getElementById('inactivityTimeValue');
     const inactivityTimeUnitSelect = document.getElementById('inactivityTimeUnit');
-    const disableAutoSuspensionCheckbox = document.getElementById('disableAutoSuspension'); // CHANGES HERE: NEW ELEMENT
+    const disableAutoSuspensionCheckbox = document.getElementById('disableAutoSuspension');
     const neverSuspendPinnedCheckbox = document.getElementById('neverSuspendPinned');
     const neverSuspendActiveInWindowCheckbox = document.getElementById('neverSuspendActiveInWindow');
     const neverSuspendAudioCheckbox = document.getElementById('neverSuspendAudio');
@@ -13,12 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeSelect = document.getElementById('theme');
     const saveButton = document.getElementById('saveButton');
     const statusMessageDiv = document.getElementById('statusMessage');
+    const openShortcutsBtn = document.getElementById('openShortcutsBtn'); // NEW: Get the shortcut button
 
     // Default settings (must match background.js defaults)
     const defaultSettings = {
         inactivityTimeValue: 15,
         inactivityTimeUnit: 'minutes',
-        disableAutoSuspension: false, // CHANGES HERE: NEW DEFAULT
+        disableAutoSuspension: false,
         neverSuspendPinned: true,
         neverSuspendActiveInWindow: false,
         neverSuspendAudio: true,
@@ -35,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.sync.get(defaultSettings, (items) => {
             inactivityTimeValueInput.value = items.inactivityTimeValue;
             inactivityTimeUnitSelect.value = items.inactivityTimeUnit;
-            disableAutoSuspensionCheckbox.checked = items.disableAutoSuspension; // CHANGES HERE: LOAD NEW SETTING
+            disableAutoSuspensionCheckbox.checked = items.disableAutoSuspension;
             neverSuspendPinnedCheckbox.checked = items.neverSuspendPinned;
             neverSuspendActiveInWindowCheckbox.checked = items.neverSuspendActiveInWindow;
             neverSuspendAudioCheckbox.checked = items.neverSuspendAudio;
@@ -54,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const settings = {
             inactivityTimeValue: parseInt(inactivityTimeValueInput.value),
             inactivityTimeUnit: inactivityTimeUnitSelect.value,
-            disableAutoSuspension: disableAutoSuspensionCheckbox.checked, // CHANGES HERE: SAVE NEW SETTING
+            disableAutoSuspension: disableAutoSuspensionCheckbox.checked,
             neverSuspendPinned: neverSuspendPinnedCheckbox.checked,
             neverSuspendActiveInWindow: neverSuspendActiveInWindowCheckbox.checked,
             neverSuspendAudio: neverSuspendAudioCheckbox.checked,
@@ -89,8 +90,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Event Listeners
-    saveButton.addEventListener('click', saveSettings);
-    themeSelect.addEventListener('change', () => applyTheme(themeSelect.value)); // Live preview of theme
+    if (saveButton) {
+        saveButton.addEventListener('click', saveSettings);
+    }
+    if (themeSelect) {
+        themeSelect.addEventListener('change', () => applyTheme(themeSelect.value)); // Live preview of theme
+    }
+
+    // NEW: Event listener for the shortcut button
+    if (openShortcutsBtn) {
+        openShortcutsBtn.addEventListener('click', () => {
+            // This opens Chrome's built-in shortcuts page for extensions
+            chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+        });
+    }
 
     // Load settings when the options page is opened
     loadSettings();
