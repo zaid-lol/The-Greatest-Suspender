@@ -24,7 +24,8 @@
     "tabs",
     "storage",
     "contextMenus",
-    "scripting"
+    "scripting",
+    "activeTab"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -36,6 +37,15 @@
         "mac": "Command+Shift+S"
       },
       "description": "Suspend the current tab"
+    },
+    "suspend-all-tabs": {
+      "description": "Suspend all tabs in the current window"
+    },
+    "suspend-all-but-current-tab": {
+      "description": "Suspend all tabs except the current one"
+    },
+    "unsuspend-all-tabs": {
+      "description": "Unsuspend all suspended tabs in the current window"
     }
   },
   "web_accessible_resources": [
