@@ -11,101 +11,87 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
             color: #333;
             text-align: center;
+            cursor: pointer; /* Indicate it's clickable */
+            user-select: none; /* Prevent text selection on click */
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition for theme change */
         }
+        /* CHANGES HERE: Dark mode styles for the suspended page */
+        body.dark-mode {
+            background-color: #2c2c2c;
+            color: #eee;
+        }
+        body.dark-mode .container {
+            background-color: #3a3a3a;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        body.dark-mode h1 {
+            color: #ff7f7f; /* A darker red for dark mode */
+        }
+        body.dark-mode p {
+            color: #ccc;
+        }
+        body.dark-mode .url-display {
+            color: #bbb;
+        }
+
         .container {
             background-color: #fff;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             max-width: 600px;
             width: 90%;
-            animation: fadeIn 0.8s ease-out;
+            box-sizing: border-box;
         }
         h1 {
-            color: #e74c3c;
+            color: #e74c3c; /* Red for 'Suspended' */
             font-size: 2.5em;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         p {
             font-size: 1.1em;
-            line-height: 1.6;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
         }
-        .original-info {
-            font-size: 1em;
-            color: #555;
-            margin-bottom: 25px;
-            word-break: break-all; /* Ensure long URLs wrap */
+        .url-display {
+            font-size: 0.9em;
+            color: #666;
+            word-break: break-all;
+            margin-bottom: 30px;
         }
-        .original-info strong {
-            display: block;
-            font-size: 1.2em;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        button {
-            background-color: #28a745;
+        #restoreButton {
+            background-color: #2ecc71; /* Green button */
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 1.2em;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 1.1em;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
         }
-        button:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
+        #restoreButton:hover {
+            background-color: #27ae60;
         }
-        button:active {
-            transform: translateY(0);
-        }
-
-        /* Dark Mode Styles */
-        body.dark-mode {
-            background-color: #222;
-            color: #eee;
-        }
-        body.dark-mode .container {
-            background-color: #333;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-        }
-        body.dark-mode h1 {
-            color: #e67e22; /* A more orange-red for dark mode */
-        }
-        body.dark-mode .original-info {
-            color: #ccc;
-        }
-        body.dark-mode .original-info strong {
-            color: #eee;
-        }
-        body.dark-mode button {
-            background-color: #28a745; /* Green button stays the same */
-        }
-        body.dark-mode button:hover {
-            background-color: #218838;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Optional: Add a simple animation or hover effect for the whole page */
+        body:active {
+            opacity: 0.9; /* Slight fade when clicked */
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Tab Suspended to Save Memory</h1>
-        <p>This tab was automatically suspended due to inactivity or manually suspended to free up system resources.</p>
-        <div class="original-info">
-            <strong>Original Page:</strong> <span id="originalTitle"></span><br>
-            <span id="originalUrl"></span>
+        <h1>Tab Suspended</h1>
+        <p>This tab has been suspended to save memory.</p>
+        <div class="url-display">
+            Original URL: <span id="originalUrl">Loading...</span>
         </div>
-        <button id="restoreButton">Click to Restore Tab</button>
+        <p>Click anywhere on this page, or click the button below to restore.</p>
+        <button id="restoreButton">Restore Tab</button>
     </div>
     <script src="suspended.js"></script>
 </body>
