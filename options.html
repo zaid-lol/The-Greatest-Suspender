@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tab Suspender Settings</title>
+    <title>The Greatest Suspender Settings</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -135,11 +135,14 @@
     </style>
 </head>
 <body>
-    <h1>Tab Suspender Settings</h1>
+    <h1>The Greatest Suspender Settings</h1>
 
     <div class="setting-section">
         <h2>Automatic Suspension</h2>
-        <label for="inactivityTimeValue">Automatically suspend tabs after:</label>
+        <label class="checkbox-label">
+            <input type="checkbox" id="disableAutoSuspension"> Disable automatic suspension
+        </label>
+        <label for="inactivityTimeValue" style="margin-top: 10px;">Automatically suspend tabs after:</label>
         <input type="number" id="inactivityTimeValue" min="1" value="15">
         <select id="inactivityTimeUnit">
             <option value="seconds">seconds</option>
@@ -199,6 +202,7 @@
         <p>If you find this extension useful, please consider a small donation to support its continued development!</p>
         <a href="#YOUR_DONATION_LINK_HERE#" target="_blank" class="donation-button">Donate / Buy Me a Coffee</a>
     </div>
+
     <script src="options.js"></script>
 </body>
 </html>
