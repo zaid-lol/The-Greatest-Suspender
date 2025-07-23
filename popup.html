@@ -37,7 +37,6 @@
             color: #eee;
         }
 
-
         h1 {
             font-size: 1.2em;
             margin-top: 0;
@@ -65,7 +64,6 @@
             padding: 8px;
             border-bottom: 1px solid #eee;
             font-size: 0.9em;
-            /* No word-break: break-all here, handled by flex and child elements */
         }
         .tab-list-item:last-child {
             border-bottom: none;
@@ -73,23 +71,22 @@
         .tab-info {
             flex-grow: 1;
             margin-right: 10px;
-            min-width: 0; /* Ensures flex item can shrink below its content size */
+            min-width: 0;
         }
         .tab-title {
             font-weight: bold;
             display: block;
-            white-space: nowrap; /* CHANGES HERE: Keep title on one line */
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .tab-url {
             color: #666;
             font-size: 0.8em;
-            /* CHANGES HERE: Allow URL to wrap */
-            white-space: normal; /* Allow wrapping */
-            word-break: break-all; /* Break long words if necessary */
-            overflow: visible; /* Ensure content is not hidden */
-            text-overflow: clip; /* No ellipsis if it wraps */
+            white-space: normal;
+            word-break: break-all;
+            overflow: visible;
+            text-overflow: clip;
         }
         body.dark-mode .tab-url {
             color: #bbb;
@@ -103,17 +100,17 @@
             cursor: pointer;
             font-size: 0.8em;
             transition: background-color 0.2s ease;
-            white-space: nowrap; /* Keep button text on one line */
-            flex-shrink: 0; /* Prevent button from shrinking */
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .tab-list-item button:hover {
             opacity: 0.9;
         }
         .suspend-btn {
-            background-color: #e74c3c; /* Red for suspend */
+            background-color: #e74c3c;
         }
         .unsuspend-btn {
-            background-color: #2ecc71; /* Green for unsuspend */
+            background-color: #2ecc71;
         }
         .bulk-actions {
             display: flex;
@@ -123,7 +120,7 @@
         .bulk-actions button {
             flex-grow: 1;
             margin: 0 5px;
-            background-color: #3498db; /* Blue for bulk actions */
+            background-color: #3498db;
             color: white;
             border: none;
             padding: 8px 12px;
@@ -159,12 +156,50 @@
             margin-left: 5px;
         }
         body.dark-mode .current-tab-marker {
-            color: #87CEEB; /* Lighter blue for dark mode */
+            color: #87CEEB;
+        }
+        /* NEW STYLES FOR SETTINGS SECTION */
+        .settings-section {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        body.dark-mode .settings-section {
+            border-top-color: #555;
+        }
+        .settings-section h2 {
+            font-size: 1em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+        .settings-section .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        .settings-section .setting-item label {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .settings-section .setting-item input[type="checkbox"] {
+            margin-left: auto;
+            transform: scale(1.2); /* Make checkbox a bit larger */
         }
     </style>
 </head>
 <body>
     <h1>The Greatest Suspender</h1>
+
+    <div class="settings-section">
+        <h2>Settings</h2>
+        <div class="setting-item">
+            <label for="unsuspendInBackground">Unsuspend in background:</label>
+            <input type="checkbox" id="unsuspendInBackground">
+        </div>
+        </div>
     <div class="tab-list" id="tabList">
         <div class="message" id="loadingMessage">Loading tabs...</div>
     </div>
