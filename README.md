@@ -1,54 +1,100 @@
 # The Greatest Suspender
 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/zaid-lol/The-Greatest-Suspender/blob/main/LICENSE)
-Reclaim your browser's memory and boost performance by intelligently suspending inactive tabs.
+## 🚀 Reclaim Your Chrome Memory! 🚀
 
-## Overview
+The Greatest Suspender is a powerful Chrome extension designed to help you boost your browser's performance by automatically and manually suspending inactive tabs. Say goodbye to sluggish Browse and excessive memory consumption!
 
-Are you tired of Chrome hogging all your RAM? Do too many open tabs slow down your Browse experience and drain your battery? **The Greatest Suspender** is here to help!
+---
 
-This lightweight and highly customizable Chrome extension intelligently suspends inactive tabs, freeing up valuable system resources without closing your pages. Whether you prefer a fully automated approach or want manual control, The Greatest Suspender offers the flexibility you need for a smoother, faster Browse session.
+## ✨ Features
 
-## Features
+* **Automatic Tab Suspension:**
+    * Set a custom inactivity time (seconds, minutes, or hours) after which tabs will automatically suspend.
+    * Option to disable automatic suspension entirely.
+* **Intelligent Exclusion Rules:**
+    * **Never suspend:** Pinned tabs, the active tab in each window, tabs playing audio, tabs when offline, or tabs when connected to a power source.
+    * Define a list of URLs (one per line) that should *never* be suspended, perfect for web apps, email, or frequently used sites.
+* **Smart Auto-Restoration:**
+    * Automatically unsuspend a tab when you view it, restoring its state.
+* **Manual Control:**
+    * **Popup UI:** Easily suspend or unsuspend individual tabs directly from the extension's popup.
+    * **Context Menu:** Right-click on any page and select "Suspend This Tab" for quick action.
+* **Keyboard Shortcuts (Configurable):**
+    * **Suspend Current Tab:** Quickly suspend the tab you're currently viewing.
+    * **Suspend All Tabs:** Suspend all tabs in the current window.
+    * **Suspend All But Current Tab:** Suspend all tabs in the current window except the active one.
+    * **Unsuspend All Tabs:** Restore all suspended tabs in the current window.
+* **Customizable Appearance:**
+    * Toggle between **Light and Dark Mode** for the options page and popup UI to match your preference.
+* **Bulk Actions:**
+    * Suspend all tabs or all but the current tab with dedicated buttons in the popup.
+    * Unsuspend all suspended tabs in the current window.
 
-* **Automatic Suspension:** Set a custom inactivity time (in seconds, minutes, or hours) after which tabs will automatically suspend.
-* **Manual Suspension:**
-    * Quickly suspend the current tab via `Ctrl+Shift+S` keyboard shortcut.
-    * Right-click any tab or anywhere on a page to suspend instantly.
-    * Use the extension popup to suspend individual tabs.
-* **Smart Exclusion Rules:** Prevent suspension for important tabs like:
-    * Pinned tabs
-    * The active tab in each window
-    * Tabs playing audio
-    * Tabs when offline or connected to a power source
-    * Custom URLs you define (e.g., mail.google.com, youtube.com).
-* **Effortless Restoration:** Click a suspended tab or its "Restore" button to instantly bring it back to life.
-* **Batch Actions:** Suspend all tabs, suspend all except the current one, or unsuspend all tabs with a single click from the popup.
-* **Customizable Theme:** Choose between light and dark modes for the extension's interface in the options page.
+---
 
-## Benefits
+## 🛠️ Installation
 
-* **Save Memory & CPU:** Significantly reduce resource consumption, especially with many tabs open.
-* **Improve Performance:** Enjoy a faster, more responsive browser.
-* **Extend Battery Life:** Lower CPU usage can mean longer battery life for laptops.
-* **Reduce Clutter:** Keep your tab bar clean without losing your pages.
+1.  **Download:** Clone or download this repository.
+    ```bash
+    git clone [https://github.com/zaid-lol/The-Greatest-Suspender.git](https://github.com/zaid-lol/The-Greatest-Suspender.git)
+    ```
+2.  **Open Chrome Extensions:**
+    * Open Chrome.
+    * Type `chrome://extensions` in the address bar and press Enter.
+    * Alternatively, go to Chrome Menu (three dots) > More tools > Extensions.
+3.  **Enable Developer Mode:**
+    * Toggle on "Developer mode" in the top-right corner.
+4.  **Load Unpacked:**
+    * Click on "Load unpacked".
+    * Navigate to the directory where you downloaded/cloned "The Greatest Suspender" and select the folder.
+5.  **Pin the Extension:**
+    * Click the puzzle piece icon next to your address bar.
+    * Find "The Greatest Suspender" and click the pin icon to make it easily accessible in your toolbar.
 
-## Installation (Loading as an Unpacked Extension)
+---
 
-Since this extension is not on the Chrome Web Store, you can easily install it by loading it as an "unpacked" extension in Chrome's Developer Mode.
+## ⚙️ Usage & Configuration
 
-1.  **Download:** Click the green **"<> Code"** button on this GitHub repository page (usually near the top right) and select **"Download ZIP"**.
-2.  **Unzip:** Extract the downloaded ZIP file to a convenient location on your computer (e.g., create a new folder named `The-Greatest-Suspender` and extract its contents there).
-3.  **Open Chrome Extensions:** Open your Chrome browser and type `chrome://extensions/` into the address bar, then press Enter.
-4.  **Enable Developer Mode:** In the top right corner of the Extensions page, toggle on the **"Developer mode"** switch.
-5.  **Load Unpacked:** Click the **"Load unpacked"** button that now appears.
-6.  **Select Folder:** Navigate to the folder where you unzipped the extension (the one containing `manifest.json`, `background.js`, `popup.html`, etc.) and select that folder.
+### Extension Popup
 
-Your extension, "The Greatest Suspender," should now appear in your list of installed extensions and its icon will be visible in your browser's toolbar!
+Click on the extension icon in your Chrome toolbar to open the popup. From here, you can:
+* See a list of all open tabs in the current window.
+* Manually suspend or unsuspend individual tabs.
+* Use the bulk action buttons: "Suspend All", "Suspend All But Current", and "Unsuspend All Suspended".
+* There's also an option to "Unsuspend in background" to prevent new unsuspended tabs from gaining focus immediately.
 
-## Usage
+### Options Page
 
-* **Extension Popup:** Click the extension icon in your toolbar to see open tabs and manually suspend/restore them, or use the batch action buttons.
-* **Keyboard Shortcut:** Press `Ctrl + Shift + S` (or `Command + Shift + S` on Mac) to instantly suspend the currently active tab.
-* **Context Menu:** Right-click on any tab in the tab bar or on any webpage to find the "Suspend This Tab" option.
-* **Options Page:** Right-click the extension icon and select "Options" to configure automatic suspension settings, exclusion rules, and theme.
+To access the settings:
+1.  Right-click on "The Greatest Suspender" icon in your toolbar.
+2.  Select "Options".
+
+On the options page, you can:
+* **Adjust Inactivity Time:** Set how long a tab must be inactive before it's considered for suspension.
+* **Toggle Automatic Suspension:** Turn off auto-suspension if you prefer manual control.
+* **Configure Exclusion Rules:** Check boxes for tabs you never want to suspend (pinned, active, audio, etc.).
+* **Manage Excluded URLs:** Add specific URLs (one per line) that should always remain unsuspended.
+* **Enable/Disable Auto-Restore:** Choose if tabs should unsuspend automatically when clicked.
+* **Customize Appearance:** Switch between Light and Dark themes for the extension's UI.
+* **Context Menu Option:** Enable or disable "Suspend This Tab" in your right-click menu.
+
+### Keyboard Shortcuts
+
+"The Greatest Suspender" provides powerful keyboard commands for quick actions. To configure them:
+1.  Go to `chrome://extensions/shortcuts` in your Chrome browser.
+2.  Find "The Greatest Suspender" in the list.
+3.  Click the pencil icon next to each command (e.g., "Suspend current tab", "Suspend all tabs") and assign your preferred keyboard combination.
+
+## 📄 License
+
+This project is open-source and available under the MIT License.
+
+---
+
+## 🐛 Issues & Contributions
+
+Found a bug? Have a feature request? Feel free to open an issue on the GitHub repository.
+
+Contributions are welcome! If you'd like to contribute code, please fork the repository and submit a pull request.
+
+---
