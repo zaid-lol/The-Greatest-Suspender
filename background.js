@@ -1,10 +1,9 @@
-let suspensionSettings = {}; // Global variable to store settings
+let suspensionSettings = {};
 
-// Default settings
 const defaultSettings = {
     inactivityTimeValue: 15,
     inactivityTimeUnit: 'minutes',
-    disableAutoSuspension: false, // CHANGES HERE: NEW SETTING - Default to auto-suspension ON
+    disableAutoSuspension: false,
     neverSuspendPinned: true,
     neverSuspendActiveInWindow: false,
     neverSuspendAudio: true,
@@ -13,129 +12,110 @@ const defaultSettings = {
     autoUnsuspendOnView: true,
     excludedUrls: '',
     addContextMenu: true,
-    theme: 'light' // Default theme
+    theme: 'light'
 };
 
-// Helper to convert time to milliseconds
 function convertToMilliseconds(value, unit) {
     switch (unit) {
         case 'seconds': return value * 1000;
         case 'minutes': return value * 60 * 1000;
         case 'hours': return value * 60 * 60 * 1000;
-        default: return value * 60 * 1000; // Default to minutes
+        default: return value * 60 * 1000;
     }
 }
 
-// Function to load settings
 function loadSettings() {
     return new Promise((resolve) => {
         chrome.storage.sync.get(defaultSettings, (items) => {
             suspensionSettings = items;
-            // console.log('Settings loaded:', suspensionSettings);
-            updateContextMenu(); // Update context menu on settings load
+            updateContextMenu();
             resolve(suspensionSettings);
         });
     });
 }
 
-// Function to suspend a tab
 async function suspendTab(tabId, originalUrl) {
-    // console.log(`Attempting to suspend tab: ${tabId}, Original URL: ${originalUrl}`);
-
-    // No need to loadSettings here again, it's called on interval start and startup
-    const settings = suspensionSettings; // Use the already loaded global settings
-
     if (!originalUrl || originalUrl.startsWith('chrome://') || originalUrl.startsWith('about:') || originalUrl.startsWith(chrome.runtime.getURL(''))) {
-        // console.log(`Not suspending special tab: ${originalUrl}`);
-        return; // Don't suspend internal Chrome pages or already suspended pages
+        console.warn(`Background: Not suspending special tab: ${originalUrl} (Tab ID: ${tabId})`);
+        return;
     }
 
     const suspendedUrl = chrome.runtime.getURL(`suspended.html?originalUrl=${encodeURIComponent(originalUrl)}`);
 
     try {
         await chrome.tabs.update(tabId, { url: suspendedUrl });
-        // console.log(`Tab ${tabId} suspended.`);
+        console.log(`Background: Tab ${tabId} suspended successfully. Original: ${originalUrl}`);
     } catch (error) {
-        console.error(`Error suspending tab ${tabId}: ${error.message}`);
+        console.error(`Background: Error suspending tab ${tabId} (URL: ${originalUrl}): ${error.message}`);
     }
 }
 
-// Function to unsuspend a tab
-async function unsuspendTab(tabId, url) {
+// CHANGES HERE: Added makeActive parameter with default false
+async function unsuspendTab(tabId, url, makeActive = false) {
     if (!url) {
-        console.error('No URL provided to unsuspend tab.');
+        console.error('Background: No URL provided to unsuspend tab.');
         return;
     }
+    // ADDED LOG HERE
+    console.log(`Background: unsuspendTab function called for tab ${tabId}. Final makeActive value: ${makeActive}`);
     try {
-        await chrome.tabs.update(tabId, { url: url, active: true });
-        // console.log(`Tab ${tabId} unsuspended to: ${url}`);
+        const updateProperties = { url: url };
+        if (makeActive) {
+            updateProperties.active = true; // Only set active if explicitly requested
+        }
+        await chrome.tabs.update(tabId, updateProperties);
+        console.log(`Background: Tab ${tabId} unsuspended to: ${url}`);
     } catch (error) {
-        console.error(`Error unsuspending tab ${tabId}: ${error.message}`);
+        console.error(`Background: Error unsuspending tab ${tabId} to URL "${url}": ${error.message}`);
     }
 }
 
+let tabActivity = {};
 
-// --- Tab Suspension Logic ---
-let tabActivity = {}; // Stores last active time for each tabId
-
-// Initialize tab activity on startup
 chrome.runtime.onInstalled.addListener(() => {
-    // console.log("Extension installed or updated.");
-    loadSettings(); // Load settings on install/update
-    startInactivityCheck(); // Start the inactivity check interval
-});
-
-// Load settings when service worker starts or resumes
-chrome.runtime.onStartup.addListener(() => {
-    // console.log("Extension started up.");
     loadSettings();
     startInactivityCheck();
 });
 
-// Listen for tab activation (when user switches tabs)
-chrome.tabs.onActivated.addListener(activeInfo => {
-    tabActivity[activeInfo.tabId] = Date.now();
-    // console.log(`Tab ${activeInfo.tabId} activated. Updated activity.`);
+chrome.runtime.onStartup.addListener(() => {
+    loadSettings();
+    startInactivityCheck();
 });
 
-// Listen for tab updates (when content loads or changes)
+chrome.tabs.onActivated.addListener(activeInfo => {
+    tabActivity[activeInfo.tabId] = Date.now();
+});
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' && tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('about:')) {
         tabActivity[tabId] = Date.now();
-        // console.log(`Tab ${tabId} updated. Updated activity.`);
-
-        // Auto-unsuspend if setting is enabled and it's a suspended tab
         if (tab.url.startsWith(chrome.runtime.getURL('suspended.html')) && suspensionSettings.autoUnsuspendOnView) {
             const urlParams = new URLSearchParams(tab.url);
             const originalUrl = urlParams.get('originalUrl');
             if (originalUrl) {
-                unsuspendTab(tabId, decodeURIComponent(originalUrl));
+                // This makes the tab active when navigating to the suspended page directly
+                unsuspendTab(tabId, decodeURIComponent(originalUrl), true);
             }
         }
     }
 });
 
-// Listen for tab removal (clean up activity tracking)
 chrome.tabs.onRemoved.addListener(tabId => {
     delete tabActivity[tabId];
-    // console.log(`Tab ${tabId} removed. Cleaned up activity.`);
 });
 
-// --- Inactivity Check Interval ---
 let inactivityCheckInterval;
 
 function startInactivityCheck() {
     if (inactivityCheckInterval) {
-        clearInterval(inactivityCheckInterval); // Clear existing interval if any
+        clearInterval(inactivityCheckInterval);
     }
 
     inactivityCheckInterval = setInterval(async () => {
-        await loadSettings(); // Reload settings just in case they changed from options page
+        await loadSettings();
 
-        // CHANGES HERE: NEW LOGIC - Check if auto-suspension is disabled
         if (suspensionSettings.disableAutoSuspension) {
-            // console.log("Automatic suspension is disabled. Skipping check.");
-            return; // Exit early if auto suspension is turned off
+            return;
         }
 
         const suspensionThresholdMs = convertToMilliseconds(suspensionSettings.inactivityTimeValue, suspensionSettings.inactivityTimeUnit);
@@ -144,23 +124,20 @@ function startInactivityCheck() {
         chrome.tabs.query({}, async (tabs) => {
             for (const tab of tabs) {
                 if (tab.url.startsWith(chrome.runtime.getURL('suspended.html'))) {
-                    // Already suspended, skip
                     continue;
                 }
 
-                // Check last activity
-                const lastActivity = tabActivity[tab.id] || tab.lastAccessed; // Fallback to tab.lastAccessed
+                const lastActivity = tabActivity[tab.id] || tab.lastAccessed;
                 if (now - lastActivity < suspensionThresholdMs) {
-                    continue; // Not inactive enough
+                    continue;
                 }
 
-                // Check exclusion rules
                 let shouldSuspend = true;
 
                 if (suspensionSettings.neverSuspendPinned && tab.pinned) {
                     shouldSuspend = false;
                 }
-                if (suspensionSettings.neverSuspendActiveInWindow && tab.active) { // Only active tab in *its* window
+                if (suspensionSettings.neverSuspendActiveInWindow && tab.active) {
                     shouldSuspend = false;
                 }
                 if (suspensionSettings.neverSuspendAudio && tab.audible) {
@@ -170,23 +147,16 @@ function startInactivityCheck() {
                 if (tab.active) {
                     const activeTabsInWindow = tabs.filter(t => t.windowId === tab.windowId && t.active);
                     if (activeTabsInWindow.length > 0 && activeTabsInWindow[0].id === tab.id && suspensionSettings.neverSuspendActiveInWindow) {
-                         shouldSuspend = false;
+                        shouldSuspend = false;
                     }
                 }
 
-                // Check excluded URLs
                 const excludedUrlsArray = suspensionSettings.excludedUrls.split('\n').map(url => url.trim()).filter(url => url !== '');
                 if (excludedUrlsArray.some(excludedUrl => tab.url.includes(excludedUrl))) {
                     shouldSuspend = false;
                 }
 
-                // Offline and Power Connected checks are placeholders and need additional API integration
-                // to genuinely detect these states. Without specific API usage and permissions,
-                // these checkboxes only exist for user preference but don't actively influence suspension
-                // based on system state in the current implementation.
-
                 if (shouldSuspend) {
-                    // console.log(`Tab ${tab.id} is inactive and qualifies for suspension.`);
                     const originalUrl = tab.url;
                     if (originalUrl && !originalUrl.startsWith('chrome://') && !originalUrl.startsWith('about:') && !originalUrl.startsWith(chrome.runtime.getURL(''))) {
                         await suspendTab(tab.id, originalUrl);
@@ -194,19 +164,17 @@ function startInactivityCheck() {
                 }
             }
         });
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 }
 
 
-// --- Context Menu ---
 function updateContextMenu() {
-    chrome.contextMenus.removeAll(() => { // Clear existing menu items
+    chrome.contextMenus.removeAll(() => {
         if (suspensionSettings.addContextMenu) {
             chrome.contextMenus.create({
                 id: "suspendCurrentTab",
                 title: "Suspend This Tab",
-                // CHANGES HERE: 'tab' is not a valid context in Manifest V3. Use 'page'.
-                contexts: ["page"] // Changed from ["page", "tab"] to ["page"]
+                contexts: ["page"]
             });
         }
     });
@@ -220,18 +188,29 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     }
 });
 
-// Listen for messages from popup or options page for manual suspend/unsuspend
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "suspendTabFromPopup" && request.tabId && request.originalUrl) {
         suspendTab(request.tabId, request.originalUrl);
         sendResponse({ status: "ok" });
     } else if (request.action === "unsuspendTabFromPopup" && request.tabId && request.url) {
-        unsuspendTab(request.tabId, request.url);
+        // ADDED LOG HERE
+        console.log(`Background: Received unsuspendTabFromPopup message for tab ${request.tabId}. Received makeActive: ${request.makeActive}`);
+        // THIS IS THE CRITICAL FIX: Pass the makeActive value from the request
+        unsuspendTab(request.tabId, request.url, request.makeActive);
         sendResponse({ status: "ok" });
     } else if (request.action === "bulkSuspend" && request.tabsToSuspend) {
-        request.tabsToSuspend.forEach(tab => suspendTab(tab.id, tab.url));
+        console.log('Background: Received bulkSuspend request with tabs:', request.tabsToSuspend.map(t => t.url));
+        request.tabsToSuspend.forEach(tab => {
+            if (tab.url && !tab.url.startsWith(chrome.runtime.getURL('suspended.html'))) {
+                suspendTab(tab.id, tab.url);
+            } else {
+                console.warn(`Background: Skipping suspension for already suspended or invalid tab in bulk operation: ${tab.url}`);
+            }
+        });
         sendResponse({ status: "ok" });
     } else if (request.action === "bulkUnsuspend" && request.tabsToUnsuspend) {
+        console.log('Background: Received bulkUnsuspend request with tabs:', request.tabsToUnsuspend.map(t => t.url));
+        // This defaults to makeActive = false in unsuspendTab if not provided, which is good for bulk
         request.tabsToUnsuspend.forEach(tab => unsuspendTab(tab.id, tab.url));
         sendResponse({ status: "ok" });
     } else if (request.action === "loadSettingsRequest") {
@@ -240,7 +219,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Listen for keyboard commands
 chrome.commands.onCommand.addListener((command, tab) => {
     if (command === "suspend-current-tab") {
         if (tab && tab.id && tab.url) {
@@ -249,7 +227,6 @@ chrome.commands.onCommand.addListener((command, tab) => {
     }
 });
 
-// Initial load of settings and start check
 loadSettings().then(() => {
     startInactivityCheck();
 });
