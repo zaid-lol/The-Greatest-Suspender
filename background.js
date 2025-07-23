@@ -20,7 +20,7 @@ function convertToMilliseconds(value, unit) {
         case 'seconds': return value * 1000;
         case 'minutes': return value * 60 * 1000;
         case 'hours': return value * 60 * 60 * 1000;
-        default: return value * 60 * 1000;
+        default: return value * 60 * 1000; // Default to minutes if unit is unknown
     }
 }
 
@@ -50,13 +50,11 @@ async function suspendTab(tabId, originalUrl) {
     }
 }
 
-// CHANGES HERE: Added makeActive parameter with default false
 async function unsuspendTab(tabId, url, makeActive = false) {
     if (!url) {
         console.error('Background: No URL provided to unsuspend tab.');
         return;
     }
-    // ADDED LOG HERE
     console.log(`Background: unsuspendTab function called for tab ${tabId}. Final makeActive value: ${makeActive}`);
     try {
         const updateProperties = { url: url };
@@ -144,12 +142,11 @@ function startInactivityCheck() {
                     shouldSuspend = false;
                 }
 
-                if (tab.active) {
-                    const activeTabsInWindow = tabs.filter(t => t.windowId === tab.windowId && t.active);
-                    if (activeTabsInWindow.length > 0 && activeTabsInWindow[0].id === tab.id && suspensionSettings.neverSuspendActiveInWindow) {
-                        shouldSuspend = false;
-                    }
+                // Check for active tab in current window specifically if neverSuspendActiveInWindow is true
+                if (tab.active && suspensionSettings.neverSuspendActiveInWindow) {
+                    shouldSuspend = false;
                 }
+
 
                 const excludedUrlsArray = suspensionSettings.excludedUrls.split('\n').map(url => url.trim()).filter(url => url !== '');
                 if (excludedUrlsArray.some(excludedUrl => tab.url.includes(excludedUrl))) {
@@ -193,9 +190,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         suspendTab(request.tabId, request.originalUrl);
         sendResponse({ status: "ok" });
     } else if (request.action === "unsuspendTabFromPopup" && request.tabId && request.url) {
-        // ADDED LOG HERE
         console.log(`Background: Received unsuspendTabFromPopup message for tab ${request.tabId}. Received makeActive: ${request.makeActive}`);
-        // THIS IS THE CRITICAL FIX: Pass the makeActive value from the request
         unsuspendTab(request.tabId, request.url, request.makeActive);
         sendResponse({ status: "ok" });
     } else if (request.action === "bulkSuspend" && request.tabsToSuspend) {
@@ -210,8 +205,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ status: "ok" });
     } else if (request.action === "bulkUnsuspend" && request.tabsToUnsuspend) {
         console.log('Background: Received bulkUnsuspend request with tabs:', request.tabsToUnsuspend.map(t => t.url));
-        // This defaults to makeActive = false in unsuspendTab if not provided, which is good for bulk
-        request.tabsToUnsuspend.forEach(tab => unsuspendTab(tab.id, tab.url));
+        request.tabsToUnsuspend.forEach(tab => unsuspendTab(tab.id, tab.url, false)); // Unsuspend in background for bulk
         sendResponse({ status: "ok" });
     } else if (request.action === "loadSettingsRequest") {
         loadSettings().then(settings => sendResponse(settings));
@@ -220,10 +214,60 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 chrome.commands.onCommand.addListener((command, tab) => {
-    if (command === "suspend-current-tab") {
-        if (tab && tab.id && tab.url) {
-            suspendTab(tab.id, tab.url);
-        }
+    switch (command) {
+        case "suspend-current-tab":
+            if (tab && tab.id && tab.url) {
+                if (!tab.url.startsWith('chrome://') && !tab.url.startsWith('about:') && !tab.url.startsWith(chrome.runtime.getURL('suspended.html'))) {
+                    suspendTab(tab.id, tab.url);
+                } else {
+                    console.warn(`Background Command: Cannot suspend special or already suspended tab: ${tab.url}`);
+                }
+            }
+            break;
+        case "suspend-all-tabs":
+            chrome.tabs.query({ currentWindow: true }, (tabs) => {
+                const tabsToSuspend = tabs.filter(t =>
+                    (t.url.startsWith('http://') || t.url.startsWith('https://')) &&
+                    !t.url.startsWith(chrome.runtime.getURL('suspended.html'))
+                );
+                console.log(`Background Command: Suspending ${tabsToSuspend.length} tabs for 'suspend-all-tabs' command.`);
+                tabsToSuspend.forEach(t => suspendTab(t.id, t.url));
+            });
+            break;
+        case "suspend-all-but-current-tab":
+            chrome.tabs.query({ currentWindow: true }, (tabs) => {
+                const tabsToSuspend = tabs.filter(t =>
+                    (t.url.startsWith('http://') || t.url.startsWith('https://')) &&
+                    !t.active && // Exclude the active tab
+                    !t.url.startsWith(chrome.runtime.getURL('suspended.html'))
+                );
+                console.log(`Background Command: Suspending ${tabsToSuspend.length} tabs for 'suspend-all-but-current-tab' command.`);
+                tabsToSuspend.forEach(t => suspendTab(t.id, t.url));
+            });
+            break;
+        case "unsuspend-all-tabs":
+            chrome.tabs.query({ currentWindow: true, url: chrome.runtime.getURL('suspended.html') + '*' }, (tabs) => {
+                const tabsToUnsuspend = tabs.map(t => {
+                    let originalUrl = null;
+                    try {
+                        const urlObj = new URL(t.url);
+                        const originalUrlEncoded = urlObj.searchParams.get('originalUrl');
+                        if (originalUrlEncoded !== null) {
+                            originalUrl = decodeURIComponent(originalUrlEncoded);
+                        }
+                    } catch (e) {
+                        console.error('Background Command: Error parsing URL for bulk unsuspend (ID: ' + t.id + '):', t.url, e);
+                    }
+                    return { id: t.id, url: originalUrl };
+                }).filter(t => t.url && t.url !== 'null'); // Filter out invalid original URLs
+
+                console.log(`Background Command: Unsuspending ${tabsToUnsuspend.length} tabs for 'unsuspend-all-tabs' command.`);
+                tabsToUnsuspend.forEach(t => unsuspendTab(t.id, t.url, false)); // Unsuspend in background for bulk
+            });
+            break;
+        default:
+            console.warn(`Background Command: Unknown command received: ${command}`);
+            break;
     }
 });
 
