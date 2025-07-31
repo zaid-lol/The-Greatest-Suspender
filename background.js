@@ -34,13 +34,17 @@ function loadSettings() {
     });
 }
 
-async function suspendTab(tabId, originalUrl) {
+// CHANGES HERE: Add originalTitle parameter
+async function suspendTab(tabId, originalUrl, originalTitle) {
     if (!originalUrl || originalUrl.startsWith('chrome://') || originalUrl.startsWith('about:') || originalUrl.startsWith(chrome.runtime.getURL(''))) {
         console.warn(`Background: Not suspending special tab: ${originalUrl} (Tab ID: ${tabId})`);
         return;
     }
 
-    const suspendedUrl = chrome.runtime.getURL(`suspended.html?originalUrl=${encodeURIComponent(originalUrl)}`);
+    // NEW: Encode the originalTitle for URL parameter
+    const encodedTitle = originalTitle ? encodeURIComponent(originalTitle) : '';
+    // CHANGES HERE: Pass originalTitle in the URL
+    const suspendedUrl = chrome.runtime.getURL(`suspended.html?originalUrl=${encodeURIComponent(originalUrl)}&originalTitle=${encodedTitle}`);
 
     try {
         await chrome.tabs.update(tabId, { url: suspendedUrl });
@@ -155,8 +159,11 @@ function startInactivityCheck() {
 
                 if (shouldSuspend) {
                     const originalUrl = tab.url;
+                    // CHANGES HERE: Get the original title for auto-suspension
+                    const originalTitle = tab.title || originalUrl; // Fallback to URL if title is empty
                     if (originalUrl && !originalUrl.startsWith('chrome://') && !originalUrl.startsWith('about:') && !originalUrl.startsWith(chrome.runtime.getURL(''))) {
-                        await suspendTab(tab.id, originalUrl);
+                        // CHANGES HERE: Pass originalTitle to suspendTab
+                        await suspendTab(tab.id, originalUrl, originalTitle);
                     }
                 }
             }
@@ -180,14 +187,16 @@ function updateContextMenu() {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "suspendCurrentTab") {
         if (tab && tab.id && tab.url) {
-            suspendTab(tab.id, tab.url);
+            // CHANGES HERE: Pass tab.title for context menu suspension
+            suspendTab(tab.id, tab.url, tab.title || tab.url);
         }
     }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    // CHANGES HERE: Expect originalTitle from popup
     if (request.action === "suspendTabFromPopup" && request.tabId && request.originalUrl) {
-        suspendTab(request.tabId, request.originalUrl);
+        suspendTab(request.tabId, request.originalUrl, request.originalTitle);
         sendResponse({ status: "ok" });
     } else if (request.action === "unsuspendTabFromPopup" && request.tabId && request.url) {
         console.log(`Background: Received unsuspendTabFromPopup message for tab ${request.tabId}. Received makeActive: ${request.makeActive}`);
@@ -197,7 +206,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log('Background: Received bulkSuspend request with tabs:', request.tabsToSuspend.map(t => t.url));
         request.tabsToSuspend.forEach(tab => {
             if (tab.url && !tab.url.startsWith(chrome.runtime.getURL('suspended.html'))) {
-                suspendTab(tab.id, tab.url);
+                // CHANGES HERE: Pass tab.title for bulk suspension
+                suspendTab(tab.id, tab.url, tab.title || tab.url);
             } else {
                 console.warn(`Background: Skipping suspension for already suspended or invalid tab in bulk operation: ${tab.url}`);
             }
@@ -210,6 +220,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === "loadSettingsRequest") {
         loadSettings().then(settings => sendResponse(settings));
         return true; // Indicates async response
+    } else if (request.action === "unsuspendTabFromSuspendedPage" && request.url) { // NEW: Handle unsuspend from the suspended page itself
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0] && tabs[0].url.startsWith(chrome.runtime.getURL('suspended.html'))) { // Ensure it's the suspended page
+                unsuspendTab(tabs[0].id, request.url, true); // Make it active
+            } else {
+                console.warn('Background: unsuspendTabFromSuspendedPage called on non-suspended or inactive tab.');
+            }
+        });
+        sendResponse({ status: "ok" });
     }
 });
 
@@ -218,7 +237,8 @@ chrome.commands.onCommand.addListener((command, tab) => {
         case "suspend-current-tab":
             if (tab && tab.id && tab.url) {
                 if (!tab.url.startsWith('chrome://') && !tab.url.startsWith('about:') && !tab.url.startsWith(chrome.runtime.getURL('suspended.html'))) {
-                    suspendTab(tab.id, tab.url);
+                    // CHANGES HERE: Pass tab.title for command suspension
+                    suspendTab(tab.id, tab.url, tab.title || tab.url);
                 } else {
                     console.warn(`Background Command: Cannot suspend special or already suspended tab: ${tab.url}`);
                 }
@@ -231,7 +251,8 @@ chrome.commands.onCommand.addListener((command, tab) => {
                     !t.url.startsWith(chrome.runtime.getURL('suspended.html'))
                 );
                 console.log(`Background Command: Suspending ${tabsToSuspend.length} tabs for 'suspend-all-tabs' command.`);
-                tabsToSuspend.forEach(t => suspendTab(t.id, t.url));
+                // CHANGES HERE: Pass t.title for bulk command suspension
+                tabsToSuspend.forEach(t => suspendTab(t.id, t.url, t.title || t.url));
             });
             break;
         case "suspend-all-but-current-tab":
@@ -242,7 +263,8 @@ chrome.commands.onCommand.addListener((command, tab) => {
                     !t.url.startsWith(chrome.runtime.getURL('suspended.html'))
                 );
                 console.log(`Background Command: Suspending ${tabsToSuspend.length} tabs for 'suspend-all-but-current-tab' command.`);
-                tabsToSuspend.forEach(t => suspendTab(t.id, t.url));
+                // CHANGES HERE: Pass t.title for bulk command suspension
+                tabsToSuspend.forEach(t => suspendTab(t.id, t.url, t.title || t.url));
             });
             break;
         case "unsuspend-all-tabs":
