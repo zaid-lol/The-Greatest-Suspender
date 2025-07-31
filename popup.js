@@ -106,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         actionButton.classList.add('suspend-btn');
                         actionButton.textContent = 'Suspend';
                         actionButton.addEventListener('click', () => {
-                            chrome.runtime.sendMessage({ action: "suspendTabFromPopup", tabId: tab.id, originalUrl: tab.url }, response => {
+                            // CHANGES HERE: Pass tab.title as originalTitle
+                            chrome.runtime.sendMessage({ action: "suspendTabFromPopup", tabId: tab.id, originalUrl: tab.url, originalTitle: tab.title }, response => {
                                 if (response && response.status === "ok") {
                                     renderTabs();
                                 }
