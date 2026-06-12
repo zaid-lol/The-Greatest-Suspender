@@ -36,7 +36,7 @@ The Greatest Suspender is a powerful Chrome extension designed to help you boost
 
 1.  **Download:** Clone or download this repository.
     ```bash
-    git clone https://github.com/zaid-lol/The-Greatest-Suspender.git
+    git clone https://github.com/zaid-lol/The-Greatest-Suspender.git "$env:USERPROFILE\Downloads\The-Greatest-Suspender"
     ```
 2.  **Open Chrome Extensions:**
     * Open Chrome.
