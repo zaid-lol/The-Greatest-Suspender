@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const neverSuspendActiveInWindowCheckbox = document.getElementById('neverSuspendActiveInWindow');
     const neverSuspendAudioCheckbox = document.getElementById('neverSuspendAudio');
     const neverSuspendOfflineCheckbox = document.getElementById('neverSuspendOffline');
-    const neverSuspendPowerConnectedCheckbox = document.getElementById('neverSuspendPowerConnected');
     const autoUnsuspendOnViewCheckbox = document.getElementById('autoUnsuspendOnView');
     const addContextMenuCheckbox = document.getElementById('addContextMenu');
     const excludedUrlsTextarea = document.getElementById('excludedUrls');
@@ -24,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
         neverSuspendActiveInWindow: false,
         neverSuspendAudio: true,
         neverSuspendOffline: true,
-        neverSuspendPowerConnected: false,
         autoUnsuspendOnView: true,
         excludedUrls: '',
         addContextMenu: true,
@@ -41,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             neverSuspendActiveInWindowCheckbox.checked = items.neverSuspendActiveInWindow;
             neverSuspendAudioCheckbox.checked = items.neverSuspendAudio;
             neverSuspendOfflineCheckbox.checked = items.neverSuspendOffline;
-            neverSuspendPowerConnectedCheckbox.checked = items.neverSuspendPowerConnected;
             autoUnsuspendOnViewCheckbox.checked = items.autoUnsuspendOnView;
             addContextMenuCheckbox.checked = items.addContextMenu;
             excludedUrlsTextarea.value = items.excludedUrls;
@@ -60,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             neverSuspendActiveInWindow: neverSuspendActiveInWindowCheckbox.checked,
             neverSuspendAudio: neverSuspendAudioCheckbox.checked,
             neverSuspendOffline: neverSuspendOfflineCheckbox.checked,
-            neverSuspendPowerConnected: neverSuspendPowerConnectedCheckbox.checked,
             autoUnsuspendOnView: autoUnsuspendOnViewCheckbox.checked,
             addContextMenu: addContextMenuCheckbox.checked,
             excludedUrls: excludedUrlsTextarea.value,
