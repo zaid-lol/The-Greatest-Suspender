@@ -83,15 +83,38 @@
             color: #555;
             font-style: italic;
         }
+        #whitelistBtn {
+            margin-top: 20px;
+            padding: 8px 16px;
+            font-size: 0.9em;
+            border: 1px solid #ccc;
+            background: #f7f7f7;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #333;
+        }
+        #whitelistBtn:hover {
+            background: #ececec;
+        }
+        body.dark-mode #whitelistBtn {
+            background: #4a4a4a;
+            border-color: #666;
+            color: #eee;
+        }
+        body.dark-mode #whitelistBtn:hover {
+            background: #565656;
+        }
     </style>
 </head>
 <body>
     <div id="suspended-content">
+        <img id="originalFavicon" src="" alt="" style="width: 48px; height: 48px; display: none; margin-bottom: 10px;">
         <h1>Tab Suspended!</h1>
         <h2 id="originalTitleDisplay"></h2>
         <p>This tab was suspended to save memory.</p>
         <a id="originalUrlLink" href="#"></a>
         <p id="restoreHint">Click anywhere to restore this tab.</p>
+        <button id="whitelistBtn" type="button">Never Suspend This Site</button>
     </div>
     <script src="suspended.js"></script>
 </body>
