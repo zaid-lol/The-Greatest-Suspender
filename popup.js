@@ -59,13 +59,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tabInfo = document.createElement('div');
                     tabInfo.classList.add('tab-info');
 
+                    const isSuspended = tab.url.startsWith(chrome.runtime.getURL('suspended.html'));
+
+                    // NEW: for suspended tabs, pull the real title/url out of the query
+                    // params instead of showing the raw chrome-extension://...suspended.html?... mess
+                    let displayTitle = tab.title || tab.url;
+                    let displayUrl = tab.url;
+                    let originalUrlFromParams = null;
+
+                    if (isSuspended) {
+                        try {
+                            const urlObj = new URL(tab.url);
+                            originalUrlFromParams = urlObj.searchParams.get('originalUrl');
+                            const originalTitleFromParams = urlObj.searchParams.get('originalTitle');
+                            if (originalUrlFromParams) {
+                                displayUrl = decodeURIComponent(originalUrlFromParams);
+                            }
+                            if (originalTitleFromParams) {
+                                displayTitle = decodeURIComponent(originalTitleFromParams);
+                            }
+                        } catch (e) {
+                            console.error('Popup: [RenderTabs] Error parsing URL object for suspended tab (ID: ' + tab.id + '):', tab.url, e);
+                        }
+                    }
+
                     const tabTitle = document.createElement('span');
                     tabTitle.classList.add('tab-title');
-                    tabTitle.textContent = tab.title || tab.url;
+                    tabTitle.textContent = displayTitle;
 
                     const tabUrl = document.createElement('span');
                     tabUrl.classList.add('tab-url');
-                    tabUrl.textContent = tab.url;
+                    tabUrl.textContent = displayUrl;
 
                     tabInfo.appendChild(tabTitle);
                     tabInfo.appendChild(tabUrl);
@@ -73,20 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     tabItem.appendChild(tabInfo);
 
                     let actionButton;
-                    const isSuspended = tab.url.startsWith(chrome.runtime.getURL('suspended.html'));
 
                     if (isSuspended) {
                         actionButton = document.createElement('button');
                         actionButton.classList.add('unsuspend-btn');
                         actionButton.textContent = 'Unsuspend';
-
-                        let originalUrlFromParams = null;
-                        try {
-                            const urlObj = new URL(tab.url);
-                            originalUrlFromParams = urlObj.searchParams.get('originalUrl');
-                        } catch (e) {
-                            console.error('Popup: [RenderTabs] Error parsing URL object for suspended tab (ID: ' + tab.id + '):', tab.url, e);
-                        }
 
                         actionButton.addEventListener('click', () => {
                             if (originalUrlFromParams) {
