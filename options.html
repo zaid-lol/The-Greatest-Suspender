@@ -219,9 +219,6 @@
         <label class="checkbox-label">
             <input type="checkbox" id="neverSuspendOffline"> Tabs when offline
         </label>
-        <label class="checkbox-label">
-            <input type="checkbox" id="neverSuspendPowerConnected"> Tabs when connected to power source
-        </label>
     </div>
 
     <div class="setting-section">
@@ -245,7 +242,8 @@
 
     <div class="setting-section">
         <h2>Never Suspend URLs (one per line)</h2>
-        <textarea id="excludedUrls" placeholder="e.g., https://mail.google.com"></textarea>
+        <p style="font-size: 0.85em; color: #777; margin-top: -5px;">Supports * as a wildcard, e.g. *.reddit.com/* or mail.google.com</p>
+        <textarea id="excludedUrls" placeholder="e.g., https://mail.google.com or *.reddit.com/*"></textarea>
     </div>
 
     <button id="saveButton">Save Settings</button>
