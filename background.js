@@ -57,6 +57,26 @@ function isTabExcluded(url) {
     return excludedUrlsArray.some(pattern => urlMatchesExcluded(url, pattern));
 }
 
+// NEW: single source of truth for "should this tab be left alone" — used by the
+// automatic inactivity checker AND every manual bulk-suspend path (buttons,
+// keyboard shortcuts, bulkSuspend messages) so they can't disagree anymore.
+function isTabProtected(tab, isOffline) {
+    if (suspensionSettings.neverSuspendPinned && tab.pinned) return true;
+    if (suspensionSettings.neverSuspendActiveInWindow && tab.active) return true;
+    if (suspensionSettings.neverSuspendAudio && tab.audible) return true;
+    if (suspensionSettings.neverSuspendOffline && isOffline) return true;
+    if (isTabExcluded(tab.url)) return true;
+    return false;
+}
+
+function getIsOffline() {
+    try {
+        return typeof navigator !== 'undefined' && 'onLine' in navigator ? !navigator.onLine : false;
+    } catch (e) {
+        return false;
+    }
+}
+
 // NEW: keeps the toolbar badge showing how many tabs are currently suspended
 function updateBadge() {
     chrome.tabs.query({}, (tabs) => {
@@ -128,6 +148,25 @@ chrome.runtime.onStartup.addListener(() => {
 
 chrome.tabs.onActivated.addListener(activeInfo => {
     tabActivity[activeInfo.tabId] = Date.now();
+
+    // BUG FIX: clicking a suspended tab to switch to it fires onActivated, NOT
+    // onUpdated (that only fires on navigation, e.g. typing a URL/bookmark).
+    // Auto-Restore previously only handled the navigation case, so simply
+    // clicking a suspended tab in the tab strip never restored it.
+    chrome.tabs.get(activeInfo.tabId, (tab) => {
+        if (chrome.runtime.lastError || !tab || !tab.url) return;
+        if (tab.url.startsWith(chrome.runtime.getURL('suspended.html')) && suspensionSettings.autoUnsuspendOnView) {
+            let originalUrl = null;
+            try {
+                originalUrl = new URL(tab.url).searchParams.get('originalUrl');
+            } catch (e) {
+                console.error('Background: Failed to parse suspended tab URL on activation:', tab.url, e);
+            }
+            if (originalUrl) {
+                unsuspendTab(activeInfo.tabId, decodeURIComponent(originalUrl), true);
+            }
+        }
+    });
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -180,12 +219,7 @@ function startInactivityCheck() {
         }
 
         // NEW: actually check offline status now instead of having a setting that does nothing
-        let isOffline = false;
-        try {
-            isOffline = typeof navigator !== 'undefined' && 'onLine' in navigator ? !navigator.onLine : false;
-        } catch (e) {
-            isOffline = false;
-        }
+        const isOffline = getIsOffline();
 
         const suspensionThresholdMs = convertToMilliseconds(suspensionSettings.inactivityTimeValue, suspensionSettings.inactivityTimeUnit);
         const now = Date.now();
@@ -201,30 +235,14 @@ function startInactivityCheck() {
                     continue;
                 }
 
-                let shouldSuspend = true;
-
-                if (suspensionSettings.neverSuspendPinned && tab.pinned) {
-                    shouldSuspend = false;
-                }
-                if (suspensionSettings.neverSuspendActiveInWindow && tab.active) {
-                    shouldSuspend = false;
-                }
-                if (suspensionSettings.neverSuspendAudio && tab.audible) {
-                    shouldSuspend = false;
-                }
-                if (suspensionSettings.neverSuspendOffline && isOffline) {
-                    shouldSuspend = false;
-                }
-                if (isTabExcluded(tab.url)) {
-                    shouldSuspend = false;
+                if (isTabProtected(tab, isOffline)) {
+                    continue;
                 }
 
-                if (shouldSuspend) {
-                    const originalUrl = tab.url;
-                    const originalTitle = tab.title || originalUrl; // Fallback to URL if title is empty
-                    if (originalUrl && !originalUrl.startsWith('chrome://') && !originalUrl.startsWith('about:') && !originalUrl.startsWith(chrome.runtime.getURL(''))) {
-                        await suspendTab(tab.id, originalUrl, originalTitle, tab.favIconUrl);
-                    }
+                const originalUrl = tab.url;
+                const originalTitle = tab.title || originalUrl; // Fallback to URL if title is empty
+                if (originalUrl && !originalUrl.startsWith('chrome://') && !originalUrl.startsWith('about:') && !originalUrl.startsWith(chrome.runtime.getURL(''))) {
+                    await suspendTab(tab.id, originalUrl, originalTitle, tab.favIconUrl);
                 }
             }
         });
@@ -290,8 +308,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ status: "ok" });
     } else if (request.action === "bulkSuspend" && request.tabsToSuspend) {
         console.log('Background: Received bulkSuspend request with tabs:', request.tabsToSuspend.map(t => t.url));
+        const isOffline = getIsOffline();
         request.tabsToSuspend.forEach(tab => {
             if (tab.url && !tab.url.startsWith(chrome.runtime.getURL('suspended.html'))) {
+                if (isTabProtected(tab, isOffline)) {
+                    console.log(`Background: Skipping protected tab in bulk suspend: ${tab.url}`);
+                    return;
+                }
                 suspendTab(tab.id, tab.url, tab.title || tab.url, tab.favIconUrl);
             } else {
                 console.warn(`Background: Skipping suspension for already suspended or invalid tab in bulk operation: ${tab.url}`);
@@ -339,9 +362,11 @@ chrome.commands.onCommand.addListener((command, tab) => {
             break;
         case "suspend-all-tabs":
             chrome.tabs.query({ currentWindow: true }, (tabs) => {
+                const isOffline = getIsOffline();
                 const tabsToSuspend = tabs.filter(t =>
                     (t.url.startsWith('http://') || t.url.startsWith('https://')) &&
-                    !t.url.startsWith(chrome.runtime.getURL('suspended.html'))
+                    !t.url.startsWith(chrome.runtime.getURL('suspended.html')) &&
+                    !isTabProtected(t, isOffline)
                 );
                 console.log(`Background Command: Suspending ${tabsToSuspend.length} tabs for 'suspend-all-tabs' command.`);
                 tabsToSuspend.forEach(t => suspendTab(t.id, t.url, t.title || t.url, t.favIconUrl));
@@ -349,10 +374,12 @@ chrome.commands.onCommand.addListener((command, tab) => {
             break;
         case "suspend-all-but-current-tab":
             chrome.tabs.query({ currentWindow: true }, (tabs) => {
+                const isOffline = getIsOffline();
                 const tabsToSuspend = tabs.filter(t =>
                     (t.url.startsWith('http://') || t.url.startsWith('https://')) &&
                     !t.active && // Exclude the active tab
-                    !t.url.startsWith(chrome.runtime.getURL('suspended.html'))
+                    !t.url.startsWith(chrome.runtime.getURL('suspended.html')) &&
+                    !isTabProtected(t, isOffline)
                 );
                 console.log(`Background Command: Suspending ${tabsToSuspend.length} tabs for 'suspend-all-but-current-tab' command.`);
                 tabsToSuspend.forEach(t => suspendTab(t.id, t.url, t.title || t.url, t.favIconUrl));
