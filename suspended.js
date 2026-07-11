@@ -27,9 +27,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (originalTitle) {
-        originalTitleDisplay.textContent = decodeURIComponent(originalTitle);
+        const decodedTitle = decodeURIComponent(originalTitle);
+        originalTitleDisplay.textContent = decodedTitle;
+        // NEW: set the real browser tab title too, so the tab strip shows the
+        // page's actual name instead of just "Tab Suspended"
+        document.title = decodedTitle;
     } else {
         originalTitleDisplay.textContent = 'Untitled Tab'; // Fallback if title is missing
+    }
+
+    // NEW: set the browser tab's favicon (the little icon in the tab strip itself)
+    // to match the original site, not the extension's generic icon
+    function setTabFavicon(iconUrl) {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.href = iconUrl;
     }
 
     // NEW: show the site's real favicon instead of just a generic suspended icon
@@ -41,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             originalFavicon.addEventListener('error', () => {
                 originalFavicon.style.display = 'none';
             });
+            setTabFavicon(decodedFavicon);
         }
     }
 
